@@ -19,7 +19,7 @@ else
     fi
 fi
 
-awk -v ipset_name="$TARGET_IPSET" '$1!~ /^#/ && $1!="" {print "add " ipset_name " " $1 " -exist"}' "$IR_IP_RANGES_FILE" | ipset restore -N
+awk -v ipset_name="$TARGET_IPSET" '$1!~ /^#/ && $1!="" {print "add " ipset_name " " $1 " -exist"}' "$IR_IP_RANGES_FILE" | ipset restore
 if [ $? -ne 0 ]; then
     exit 1
 fi
