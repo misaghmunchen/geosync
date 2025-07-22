@@ -1,15 +1,27 @@
 #!/bin/sh
 
 TARGET_IPSET='pbr_wan_4_dst_net_user'
-TARGET_DL_FILE="/usr/share/pbr/pbr_ir_ip_ranges"
-_ret=1
+IR_IP_RANGES_FILE="/usr/share/pbr/pbr_ir_ip_ranges"
 
-if [ -s "$TARGET_DL_FILE" ]; then
-	if ipset -q list "$TARGET_IPSET" >/dev/null 2>&1; then
-		if awk -v ipset="$TARGET_IPSET" '{print "add " ipset " " $1}' "$TARGET_DL_FILE" | ipset restore -!; then
-			_ret=0
-		fi
-	fi
+if [ ! -s "$IR_IP_RANGES_FILE" ]; then
+    exit 1
 fi
 
-return $_ret
+if ! ipset -q list "$TARGET_IPSET" >/dev/null 2>&1; then
+    ipset create "$TARGET_IPSET" hash:net maxelem 65536
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+else
+    ipset flush "$TARGET_IPSET"
+    if [ $? -ne 0 ]; then
+        exit 1
+    fi
+fi
+
+awk -v ipset_name="$TARGET_IPSET" '$1!~ /^#/ && $1!="" {print "add " ipset_name " " $1 " -exist"}' "$IR_IP_RANGES_FILE" | ipset restore -N
+if [ $? -ne 0 ]; then
+    exit 1
+fi
+
+exit 0
