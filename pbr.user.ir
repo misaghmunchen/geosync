@@ -1,0 +1,15 @@
+#!/bin/sh
+
+TARGET_IPSET='pbr_wan_4_dst_net_user'
+TARGET_DL_FILE="/usr/share/pbr/pbr_ir_ip_ranges"
+_ret=1
+
+if [ -s "$TARGET_DL_FILE" ]; then
+	if ipset -q list "$TARGET_IPSET" >/dev/null 2>&1; then
+		if awk -v ipset="$TARGET_IPSET" '{print "add " ipset " " $1}' "$TARGET_DL_FILE" | ipset restore -!; then
+			_ret=0
+		fi
+	fi
+fi
+
+return $_ret
